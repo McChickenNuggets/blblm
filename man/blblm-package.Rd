@@ -2,8 +2,6 @@
 % Please edit documentation in R/blblm.R
 \docType{package}
 \name{blblm-package}
-\alias{blblm}
-\alias{blblm-package}
 \title{blblm: Perform bag of little bootstrap for linear regression model}
 \description{
 BLB is an awesome algorithm to use to increase the precision and accurity of getting coefficients. Therefore, I'd like to rewrite lm function using the algorithm, to make the prediction more acurates as well as the coefficients and sigmas.Remember, eric qian is sb.
