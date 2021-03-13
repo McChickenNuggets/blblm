@@ -12,5 +12,5 @@ glm1<-function(formula, data, n, family){
   environment(formula) <- environment()
   freqs <- rmultinom(1, n, rep(1, nrow(data)))
   fit <- glm(formula, data, family = family, weights = freqs)
-  list(coef = blbcoef(fit), blbsigma = sigma(fit))
+  list(coef = blbcoef(fit), sigma = sigma(fit))
 }

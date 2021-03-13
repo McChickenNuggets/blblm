@@ -13,7 +13,7 @@ coef.blblm <- function(object, ...) {
   est <- object$estimates
   map_mean(est, ~ map_cbind(., "coef") %>% rowMeans())
 }
-
+#'
 #' @export
 #' @method coef blbglm
 coef.blbglm<-function(object, ...) {

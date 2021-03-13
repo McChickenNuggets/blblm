@@ -21,3 +21,18 @@ predict.blblm <- function(object, new_data, confidence = FALSE, level = 0.95, ..
     map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>% rowMeans())
   }
 }
+#'
+#' @export
+#' @method predict blbglm
+#'
+predict.blbglm <- function(object, new_data, confidence = FALSE, level = 0.95, ...) {
+  est <- object$estimates
+  X <- model.matrix(reformulate(attr(terms(object$formula), "term.labels")), new_data)
+  if (confidence) {
+    map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>%
+               apply(1, mean_lwr_upr, level = level) %>%
+               t())
+  } else {
+    map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>% rowMeans())
+  }
+}

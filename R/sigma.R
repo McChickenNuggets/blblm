@@ -25,3 +25,20 @@ sigma.blblm <- function(object, confidence = FALSE, level = 0.95, ...) {
     return(sigma)
   }
 }
+#'
+#' @export
+#' @method sigma blbglm
+#'
+sigma.blbglm <- function(object, confidence = FALSE, level = 0.95, ...) {
+  est <- object$estimates
+  sigma <- mean(map_dbl(est, ~ mean(map_dbl(., "sigma"))))
+  if (confidence) {
+    alpha <- 1 - level
+    limits <- est %>%
+      map_mean(~ quantile(map_dbl(., "sigma"), c(alpha / 2, 1 - alpha / 2))) %>%
+      set_names(NULL)
+    return(c(sigma = sigma, lwr = limits[1], upr = limits[2]))
+  } else {
+    return(sigma)
+  }
+}

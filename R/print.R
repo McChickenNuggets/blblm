@@ -13,3 +13,9 @@ print.blblm <- function(x, ...) {
   cat(class(x), "model:", capture.output(x$formula))
   cat("\n")
 }
+#' @export
+#' @method print blbglm
+print.blbglm <- function(x, ...) {
+  cat(class(x), "model:", capture.output(x$formula))
+  cat("\n")
+}
