@@ -1,0 +1,155 @@
+---
+title: "blblm-pkgs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{blblm-pkgs}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(blblm)
+```
+
+Note: This package is an application of bag of little bootstrap(BLB)
+algorithm I learned from STA 141C (Big Data & High Performance
+Statistical Computing)
+
+## The bag of little bootstraps (BLB)
+
+It is a procedure which incorporates features of both the bootstrap and
+subsampling to yield a robust, computationally efficient means of
+assessing the quality of estimators (i.e., construct confidence
+intervals )
+
+```{r, echo = FALSE}
+DiagrammeR::grViz("blb.gv", height = 300)
+```
+
+Basically, the bag of little bootstraps = map_reduce + bootstrap.
+However, for each bootstrap, we sample $n$ from $b$ with replacement
+instead of sample $b$ from $b$ as in ordinary bootstrap.
+
+-   sample without replacement the sample $s$ times into sizes of $b$
+
+-   for each subsample
+
+    -   resample each until sample size is $n$, $r$ times
+    -   compute the bootstrap statistic (e,g., the mean of a variable,
+        or cor between two variables) for each bootstrap sample
+    -   compute the statistic (e.g., confidence interval) from the
+        bootstrap statistics
+
+-   take the average of the statistics
+
+## Intro on package `blblm`
+
+-   The main package realizes the application of BLB algorithm on Linear
+    Regression Model and Logistic Regression model
+
+-   Provide two main functions
+
+    -   `blblm()` BLB on Linear Regression Model (Could specify
+        Parallelization by setting `Parallel = TRUE`)
+    -   `blbglm()` BLB on Logistic Regression Model (Could specify
+        Parallelization by setting `Parallel = TRUE`)
+
+-   Override Four functions
+
+    -   `coef()` Obtain the coefficients for objects
+    -   `confint()` Obtain the confidence intervals for coefficients
+    -   `sigma()` Obtain the sigma for objects (Could specify confidence
+        level by setting `confindence = TRUE`)
+    -   `predict()` Predict values for new observation by given model
+        (Could specify confidence level by setting `confindence = TRUE`)
+
+### Usage of blblm
+
+#### On `blblm`
+```{r}
+
+# Setting up the model for blblm
+fitlm<-blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, Parallel = FALSE)
+
+# Obtain coefficient
+coef(fitlm)
+
+# Obtain confidence Interval for coefficients
+confint(fitlm, c("wt", "hp"))
+
+# Obtain sigma 
+sigma(fitlm)
+
+# Obtain sigma with confidence intervals
+sigma(fitlm, confidence = TRUE)
+
+# Predict new observation
+predict(fitlm, data.frame(wt = c(2.5, 3), hp = c(150, 170)))
+
+# Predict new observation with confidence intervals
+predict(fitlm, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
+
+# Print
+print(fitlm)
+```
+
+Turn warning = FALSE because we have a relatively small dataset
+Therefore for some observation, the algorithm won't converge and will have fitted probability as 0 or 1
+#### ON `blbglm`
+```{r, warning=FALSE}
+# Setting up the model for blblm
+fitglm<-blbglm(Species ~ Sepal.Length * Sepal.Width, data = iris[1:100,], m = 3, B = 100, family = binomial, Parallel = FALSE)
+
+# Obtain coefficient
+coef(fitglm)
+
+# Obtain confidence Interval for coefficients
+confint(fitglm, c("Sepal.Length", "Sepal.Width"))
+
+# Obtain sigma 
+sigma(fitglm)
+
+# Obtain sigma with confidence intervals
+sigma(fitglm, confidence = TRUE)
+
+# Predict new observation
+predict(fitglm, data.frame(Sepal.Length = c(5.5, 5.1), Sepal.Width = c(2.3, 3.5)))
+
+# Predict new observation with confidence intervals
+predict(fitglm, data.frame(Sepal.Length = c(5.5, 5.1), Sepal.Width = c(2.3, 3.5)), confidence = TRUE)
+
+# Print
+print(fitglm)
+```
+
+
+#### Parallelization
+```{r}
+library(future)
+plan(multiprocess,workers=8)
+options(future.rng.onMisuse = "ignore")
+```
+
+##### blblm
+```{r}
+## We use system.time instead of bench::mark because the html will not give the output for bench::mark
+system.time(fitlm1<-blblm(mpg ~ wt * hp, data = mtcars, m = 10, B = 5000, Parallel = FALSE))
+system.time(fitlm2<-blblm(mpg ~ wt * hp, data = mtcars, m = 10, B = 5000, Parallel = TRUE))
+```
+
+##### blbglm
+```{r, warning=FALSE}
+system.time(fitglm1<-blbglm(Species ~ Sepal.Length * Sepal.Width, data = iris[1:100,], m = 3, B = 5000, family = binomial, Parallel = FALSE))
+system.time(fitglm2<-blbglm(Species ~ Sepal.Length * Sepal.Width, data = iris[1:100,], m = 3, B = 5000, family = binomial, Parallel = TRUE))
+```
+As you can see, when you turn on parallization, the package will significantly improved its efficiency.
